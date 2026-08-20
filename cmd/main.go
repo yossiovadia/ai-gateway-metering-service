@@ -121,6 +121,8 @@ func main() {
 	mux.HandleFunc("/api/v1/admin/models/", adminHandler.HandleUpdateWeights)
 	mux.HandleFunc("/api/v1/admin/config", adminHandler.HandleConfig)
 	mux.HandleFunc("/api/v1/admin/models/provider/", adminHandler.HandleUpdateProvider)
+	mux.HandleFunc("/pipeline/ui", handler.RequireAdmin(adminHandler.ServePipelineUI))
+	mux.HandleFunc("/pipeline/data", handler.RequireAdmin(adminHandler.HandlePipeline))
 	mux.HandleFunc("/me/keys", keysHandler.HandleKeys)
 	mux.HandleFunc("/me/keys/", keysHandler.HandleKeys)
 	mux.HandleFunc("/me/whoami", keysHandler.HandleWhoAmI)

@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praxis — Pipeline</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-0: #0d1117;
+  --bg-1: #161b22;
+  --bg-2: #21262d;
+  --bg-3: #282e36;
+  --border: #30363d;
+  --text-1: #e6edf3;
+  --text-2: #8b949e;
+  --text-3: #484f58;
+  --blue: #3987e5;
+  --green: #3fb950;
+  --orange: #d95926;
+  --yellow: #c98500;
+  --magenta: #d55181;
+  --aqua: #199e70;
+  --radius: 8px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+body {
+  background: var(--bg-0);
+  color: var(--text-1);
+  font-family: var(--font);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ──────────────────────────────────── */
+
+.header {
+  height: 54px;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-2);
+  padding-left: 4px;
+}
+
+.header-spacer { flex: 1; }
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab-btn {
+  padding: 5px 14px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-2);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: capitalize;
+}
+
+.tab-btn:hover { background: var(--bg-2); color: var(--text-1); }
+
+.tab-btn.active {
+  background: rgba(57, 135, 229, 0.15);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.config-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(63, 185, 80, 0.12);
+  color: var(--green);
+  margin-left: 8px;
+}
+
+/* ── Main Layout ─────────────────────────────── */
+
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  overflow: hidden;
+}
+
+.pipeline-scroll {
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-3) transparent;
+}
+
+.pipeline-scroll::-webkit-scrollbar { width: 6px; }
+.pipeline-scroll::-webkit-scrollbar-track { background: transparent; }
+.pipeline-scroll::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 3px; }
+
+.pipeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 32px 24px;
+  min-height: 100%;
+}
+
+/* ── Endpoint Cards (Client / Provider) ──────── */
+
+.endpoint-card {
+  width: 420px;
+  max-width: 100%;
+  padding: 14px 20px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+}
+
+.endpoint-card.client { border-color: rgba(57, 135, 229, 0.4); }
+.endpoint-card.provider { border-color: rgba(63, 185, 80, 0.4); }
+
+.endpoint-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.client .endpoint-icon { background: rgba(57, 135, 229, 0.12); }
+.provider .endpoint-icon { background: rgba(63, 185, 80, 0.12); }
+
+.endpoint-info { flex: 1; min-width: 0; }
+
+.endpoint-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 2px;
+}
+
+.endpoint-detail {
+  font-size: 11px;
+  color: var(--text-2);
+  font-family: var(--mono);
+}
+
+.endpoint-badges {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tls-badge {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(63, 185, 80, 0.12);
+  color: var(--green);
+}
+
+.no-tls-badge {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(139, 148, 158, 0.12);
+  color: var(--text-2);
+}
+
+/* ── Filter Cards ────────────────────────────── */
+
+.filter-card {
+  width: 420px;
+  max-width: 100%;
+  height: 44px;
+  padding: 0 14px 0 0;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.2s, box-shadow 0.3s;
+  position: relative;
+}
+
+.filter-card:hover {
+  background: var(--bg-2);
+}
+
+.filter-card[data-cat="auth"]     { border-left-color: var(--blue); }
+.filter-card[data-cat="security"] { border-left-color: var(--orange); }
+.filter-card[data-cat="routing"]  { border-left-color: var(--aqua); }
+.filter-card[data-cat="metering"] { border-left-color: var(--yellow); }
+.filter-card[data-cat="protocol"] { border-left-color: var(--magenta); }
+.filter-card[data-cat="other"]    { border-left-color: var(--text-2); }
+
+.filter-card.glow-green {
+  box-shadow: 0 0 14px 2px rgba(63, 185, 80, 0.25);
+  border-color: rgba(63, 185, 80, 0.5);
+  border-left-color: var(--green);
+  background: rgba(63, 185, 80, 0.06);
+}
+
+.filter-card.glow-blue {
+  box-shadow: 0 0 14px 2px rgba(57, 135, 229, 0.25);
+  border-color: rgba(57, 135, 229, 0.5);
+  border-left-color: var(--blue);
+  background: rgba(57, 135, 229, 0.06);
+}
+
+.endpoint-card.glow-green {
+  box-shadow: 0 0 14px 2px rgba(63, 185, 80, 0.25);
+  border-color: rgba(63, 185, 80, 0.5);
+}
+
+.endpoint-card.glow-blue {
+  box-shadow: 0 0 14px 2px rgba(57, 135, 229, 0.25);
+  border-color: rgba(57, 135, 229, 0.5);
+}
+
+.filter-index {
+  width: 36px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  flex-shrink: 0;
+  font-family: var(--mono);
+}
+
+.filter-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--mono);
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cat-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+
+.cat-badge.auth     { background: rgba(57, 135, 229, 0.12); color: var(--blue); }
+.cat-badge.security { background: rgba(217, 89, 38, 0.12); color: var(--orange); }
+.cat-badge.routing  { background: rgba(25, 158, 112, 0.12); color: var(--aqua); }
+.cat-badge.metering { background: rgba(201, 133, 0, 0.12); color: var(--yellow); }
+.cat-badge.protocol { background: rgba(213, 81, 129, 0.12); color: var(--magenta); }
+.cat-badge.other    { background: rgba(140, 140, 140, 0.12); color: var(--text-2); }
+
+.failure-icon {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.filter-card[data-fail="open"] .failure-icon { opacity: 1; }
+
+/* ── Connectors ──────────────────────────────── */
+
+.connector {
+  width: 2px;
+  height: 14px;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.3s;
+  position: relative;
+}
+
+.connector.flow-green { background: var(--green); opacity: 0.5; }
+.connector.flow-blue  { background: var(--blue); opacity: 0.5; }
+
+.connector-arrow {
+  width: 0;
+  height: 14px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.connector-arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-3);
+}
+
+/* ── Animated Dot ────────────────────────────── */
+
+.dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0;
+  transition: top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dot.visible { opacity: 1; }
+
+.dot.green {
+  background: var(--green);
+  box-shadow: 0 0 10px 4px rgba(63, 185, 80, 0.45),
+              0 0 20px 8px rgba(63, 185, 80, 0.15);
+}
+
+.dot.blue {
+  background: var(--blue);
+  box-shadow: 0 0 10px 4px rgba(57, 135, 229, 0.45),
+              0 0 20px 8px rgba(57, 135, 229, 0.15);
+}
+
+/* ── Step Panel ──────────────────────────────── */
+
+.step-panel {
+  background: var(--bg-1);
+  border-left: 1px solid var(--border);
+  padding: 20px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-3) transparent;
+}
+
+.step-section { margin-bottom: 20px; }
+
+.step-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-3);
+  margin-bottom: 10px;
+  padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-header-arrow {
+  font-size: 12px;
+}
+
+.step-header-arrow.green { color: var(--green); }
+.step-header-arrow.blue  { color: var(--blue); }
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-3);
+  transition: all 0.15s;
+  margin-bottom: 1px;
+}
+
+.step-item.done  { color: var(--text-2); }
+.step-item.active { color: var(--text-1); background: var(--bg-2); }
+
+.step-icon {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.step-icon.pending { color: var(--text-3); }
+.step-icon.done    { color: var(--green); }
+.step-icon.active  { color: var(--green); }
+.step-icon.done-r  { color: var(--blue); }
+.step-icon.active-r { color: var(--blue); }
+
+.step-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Controls ────────────────────────────────── */
+
+.controls {
+  height: 48px;
+  background: var(--bg-1);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ctrl-btn {
+  width: 34px;
+  height: 34px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-1);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  font-family: var(--font);
+}
+
+.ctrl-btn:hover { background: var(--bg-3); border-color: var(--text-3); }
+.ctrl-btn.playing { background: rgba(57, 135, 229, 0.15); border-color: var(--blue); color: var(--blue); }
+
+.ctrl-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.speed-group {
+  display: flex;
+  margin-left: 4px;
+}
+
+.speed-btn {
+  padding: 5px 10px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.speed-btn:first-child { border-radius: 5px 0 0 5px; }
+.speed-btn:last-child  { border-radius: 0 5px 5px 0; }
+.speed-btn:not(:first-child) { border-left: none; }
+
+.speed-btn:hover { color: var(--text-2); background: var(--bg-2); }
+
+.speed-btn.active {
+  background: var(--bg-2);
+  color: var(--text-1);
+  border-color: var(--text-3);
+}
+
+.speed-btn.active + .speed-btn { border-left-color: var(--text-3); }
+
+.controls-spacer { flex: 1; }
+
+.controls-label {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ── Modal ───────────────────────────────────── */
+
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+}
+
+.modal-bg.open { opacity: 1; pointer-events: auto; }
+
+.modal-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  width: 460px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  transform: translateY(8px);
+  transition: transform 0.18s;
+}
+
+.modal-bg.open .modal-card { transform: translateY(0); }
+
+.modal-x {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+}
+
+.modal-x:hover { background: var(--bg-2); color: var(--text-1); }
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--mono);
+  margin-bottom: 6px;
+}
+
+.modal-desc {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-2);
+  margin-bottom: 24px;
+}
+
+.modal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.meta-label {
+  font-size: 12px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.meta-value {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.meta-value.mono { font-family: var(--mono); }
+
+/* ── Loading / Error ─────────────────────────── */
+
+.load-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-3);
+}
+
+.load-msg.error { color: var(--orange); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">Praxis</div>
+  <div class="subtitle">Pipeline Visualization</div>
+  <div class="header-spacer"></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="config-badge" id="configBadge">Resolved Config</div>
+</header>
+
+<main class="main">
+  <div class="pipeline-scroll" id="pipelineScroll">
+    <div class="load-msg" id="loadMsg">Loading pipeline...</div>
+    <div class="pipeline" id="pipeline"></div>
+    <div class="dot" id="dot"></div>
+  </div>
+  <aside class="step-panel" id="stepPanel"></aside>
+</main>
+
+<div class="controls">
+  <button class="ctrl-btn" id="playBtn" title="Play / Pause (Space)">&#9654;</button>
+  <button class="ctrl-btn" id="stepBtn" title="Step Forward (→)">&#9197;</button>
+  <div class="ctrl-sep"></div>
+  <div class="speed-group" id="speedGroup">
+    <button class="speed-btn" data-speed="0.5">0.5&times;</button>
+    <button class="speed-btn active" data-speed="1">1&times;</button>
+    <button class="speed-btn" data-speed="2">2&times;</button>
+  </div>
+  <div class="controls-spacer"></div>
+  <span class="controls-label" id="phaseLabel"></span>
+  <div class="ctrl-sep"></div>
+  <button class="ctrl-btn" id="resetBtn" title="Reset (R)">&#8635;</button>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal-card">
+    <button class="modal-x" id="modalX">&times;</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// Category inference: derived from filter name patterns, not hardcoded per filter.
+// When the /pipeline endpoint carries registry metadata, these heuristics are replaced.
+const CAT_PATTERNS = [
+  { match: /auth|credential|jwt/, cat: 'auth' },
+  { match: /guard|security|strip/, cat: 'security' },
+  { match: /router|load_balancer|route/, cat: 'routing' },
+  { match: /meter|token_count|token_usage|usage/, cat: 'metering' },
+  { match: /header|protocol|format|validate/, cat: 'protocol' }
+];
+
+function inferCategory(name) {
+  for (const p of CAT_PATTERNS) {
+    if (p.match.test(name)) return p.cat;
+  }
+  return 'other';
+}
+
+const CAT_LABELS = {
+  auth: 'Auth', security: 'Security', routing: 'Routing',
+  metering: 'Metering', protocol: 'Protocol', other: 'Filter'
+};
+
+const CAT_COLORS = {
+  auth: 'var(--blue)', security: 'var(--orange)', routing: 'var(--aqua)',
+  metering: 'var(--yellow)', protocol: 'var(--magenta)', other: 'var(--text-2)'
+};
+
+let data = null;
+let providers = {};
+let listenerAddrs = {};
+let currentName = null;
+let engine = null;
+
+async function load() {
+  try {
+    data = await loadJSON();
+    parseConfig();
+    buildFilterConfigs();
+    buildTabs();
+    if (data.config_source) {
+      document.getElementById('configBadge').textContent = data.config_source.split('/').pop();
+      document.getElementById('configBadge').title = data.config_source;
+    }
+    switchTab(data.resolved_listeners[0].name);
+    document.getElementById('loadMsg').style.display = 'none';
+  } catch (e) {
+    const msg = document.getElementById('loadMsg');
+    msg.textContent = 'Failed to load pipeline data — is the admin endpoint enabled?';
+    msg.classList.add('error');
+  }
+}
+
+async function loadJSON() {
+  const urls = ['/pipeline/data', '/pipeline', 'pipeline-fixture.json'];
+  for (const url of urls) {
+    try {
+      const resp = await fetch(url);
+      if (resp.ok) return resp.json();
+    } catch (_) {}
+  }
+  return xhrFallback('pipeline-fixture.json');
+}
+
+function xhrFallback(url) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onload = () => {
+      try { resolve(JSON.parse(xhr.responseText)); }
+      catch (e) { reject(e); }
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.send();
+  });
+}
+
+// Maps chain+index to the full filter config from configuration.filter_chains
+const filterConfigs = {};
+
+function buildFilterConfigs() {
+  if (!data.configuration || !data.configuration.filter_chains) return;
+  for (const chain of data.configuration.filter_chains) {
+    for (let i = 0; i < chain.filters.length; i++) {
+      const f = chain.filters[i];
+      const key = chain.name + ':' + i;
+      const config = {};
+      for (const [k, v] of Object.entries(f)) {
+        if (['filter', 'name', 'branch_chains', 'conditions', 'response_conditions', 'failure_mode'].includes(k)) continue;
+        config[k] = v;
+      }
+      filterConfigs[key] = config;
+    }
+  }
+}
+
+function getFilterConfig(filter) {
+  if (filter.config) return filter.config;
+  return filterConfigs[filter.chain + ':' + filter.chain_index] || {};
+}
+
+function parseConfig() {
+  const cfg = data.configuration;
+  if (cfg && cfg.filter_chains) {
+    for (const chain of cfg.filter_chains) {
+      const lb = chain.filters.find(f => f.filter === 'load_balancer');
+      if (lb && lb.clusters && lb.clusters[0]) {
+        const c = lb.clusters[0];
+        providers[chain.name] = {
+          cluster: c.name || chain.name,
+          endpoints: c.endpoints || [],
+          tls: c.tls || null
+        };
+      }
+    }
+  }
+  if (cfg && cfg.listeners) {
+    for (const l of cfg.listeners) {
+      listenerAddrs[l.name] = l.address || '';
+    }
+  }
+}
+
+function buildTabs() {
+  const nav = document.getElementById('tabs');
+  nav.innerHTML = '';
+  for (const l of data.resolved_listeners) {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn';
+    btn.textContent = l.name;
+    btn.onclick = () => switchTab(l.name);
+    nav.appendChild(btn);
+  }
+}
+
+function switchTab(name) {
+  if (engine) engine.reset();
+  currentName = name;
+  document.querySelectorAll('.tab-btn').forEach(b =>
+    b.classList.toggle('active', b.textContent === name));
+  const listener = data.resolved_listeners.find(l => l.name === name);
+  renderPipeline(listener);
+  renderSteps(listener);
+  engine = new Engine(listener);
+  updatePlayBtn();
+}
+
+function renderPipeline(listener) {
+  const el = document.getElementById('pipeline');
+  el.innerHTML = '';
+  const addr = listenerAddrs[listener.name] || '';
+  const prov = providers[listener.name] || { cluster: listener.name, endpoints: [], tls: null };
+
+  el.appendChild(makeEndpoint('client', '▼', listener.name + ' listener',
+    addr, null));
+  el.appendChild(makeConnector());
+  el.appendChild(makeArrow());
+
+  for (let i = 0; i < listener.filters.length; i++) {
+    const f = listener.filters[i];
+    const typeInfo = (data.filter_types || {})[f.filter] || {};
+    const cat = f.category || typeInfo.category || inferCategory(f.filter);
+    el.appendChild(makeFilter(f, cat, i));
+    if (i < listener.filters.length - 1) {
+      el.appendChild(makeConnector());
+    }
+  }
+
+  el.appendChild(makeArrow());
+  el.appendChild(makeConnector());
+  const endpoint = prov.endpoints[0] || prov.cluster;
+  const extra = prov.endpoints.length > 1 ? ' (+' + (prov.endpoints.length - 1) + ' more)' : '';
+  el.appendChild(makeEndpoint('provider', prov.tls ? '🔒' : '🔗',
+    prov.cluster, endpoint + extra, prov.tls));
+}
+
+function makeEndpoint(type, icon, name, detail, tls) {
+  const d = document.createElement('div');
+  d.className = 'endpoint-card ' + type;
+  d.dataset.role = type;
+  let badges = '';
+  if (type === 'provider') {
+    badges = tls
+      ? '<span class="tls-badge">TLS</span>' + (tls.sni ? '<span class="tls-badge">SNI</span>' : '')
+      : '<span class="no-tls-badge">Plain</span>';
+  }
+  d.innerHTML =
+    '<div class="endpoint-icon">' + icon + '</div>' +
+    '<div class="endpoint-info">' +
+      '<div class="endpoint-name">' + esc(name) + '</div>' +
+      '<div class="endpoint-detail">' + esc(detail) + '</div>' +
+    '</div>' +
+    '<div class="endpoint-badges">' + badges + '</div>';
+  return d;
+}
+
+function makeFilter(f, cat, idx) {
+  const d = document.createElement('div');
+  d.className = 'filter-card';
+  d.dataset.cat = cat;
+  d.dataset.filter = f.filter;
+  d.dataset.fail = f.failure_mode || 'closed';
+  d.dataset.idx = idx;
+  d.innerHTML =
+    '<span class="filter-index">' + idx + '</span>' +
+    '<span class="filter-name">' + esc(f.filter) + '</span>' +
+    '<span class="cat-badge ' + cat + '">' + CAT_LABELS[cat] + '</span>' +
+    '<span class="failure-icon" title="failure_mode: open"></span>';
+  d.onclick = () => openModal(f, f.category || cat);
+  return d;
+}
+
+function makeConnector() {
+  const d = document.createElement('div');
+  d.className = 'connector';
+  return d;
+}
+
+function makeArrow() {
+  const d = document.createElement('div');
+  d.className = 'connector-arrow';
+  return d;
+}
+
+function renderSteps(listener) {
+  const panel = document.getElementById('stepPanel');
+  const filters = listener.filters;
+  let h = '';
+
+  h += '<div class="step-section"><div class="step-header">' +
+       '<span class="step-header-arrow green">▶</span> Request (simulated)</div>';
+  for (let i = 0; i < filters.length; i++) {
+    h += '<div class="step-item" data-phase="req" data-si="' + i + '">' +
+         '<span class="step-icon pending">○</span>' +
+         '<span class="step-name">' + esc(filters[i].filter) + '</span></div>';
+  }
+  h += '</div>';
+
+  h += '<div class="step-section"><div class="step-header">' +
+       '<span class="step-header-arrow blue">◀</span> Response (reverse order)</div>';
+  for (let i = filters.length - 1; i >= 0; i--) {
+    const ri = filters.length - 1 - i;
+    h += '<div class="step-item" data-phase="res" data-si="' + ri + '">' +
+         '<span class="step-icon pending">○</span>' +
+         '<span class="step-name">' + esc(filters[i].filter) + '</span></div>';
+  }
+  h += '</div>';
+
+  panel.innerHTML = h;
+}
+
+class Engine {
+  constructor(listener) {
+    this.filters = listener.filters;
+    this.positions = [];
+    this.posIndex = -1;
+    this.phase = 'request';
+    this.state = 'idle';
+    this.speed = parseFloat(document.querySelector('.speed-btn.active')?.dataset.speed || '1');
+    this.timer = null;
+    this.activeEl = null;
+    this._buildPositions();
+  }
+
+  _buildPositions() {
+    const pipeline = document.getElementById('pipeline');
+    const cards = pipeline.querySelectorAll('.endpoint-card, .filter-card');
+    this.positions = Array.from(cards);
+  }
+
+  _dotY(el) {
+    return el.offsetTop + el.offsetHeight / 2 - 6;
+  }
+
+  play() {
+    if (this.state === 'playing') { this.pause(); return; }
+    if (this.state === 'idle') this._start();
+    this.state = 'playing';
+    updatePlayBtn();
+    this._scheduleAdvance();
+  }
+
+  pause() {
+    this.state = 'paused';
+    clearTimeout(this.timer);
+    updatePlayBtn();
+  }
+
+  step() {
+    if (this.state === 'playing') this.pause();
+    if (this.state === 'idle') this._start();
+    else this._advance();
+  }
+
+  reset() {
+    this.state = 'idle';
+    this.posIndex = -1;
+    this.phase = 'request';
+    clearTimeout(this.timer);
+    this._clearGlow();
+    this._resetSteps();
+    this._resetConnectors();
+    const dot = document.getElementById('dot');
+    dot.classList.remove('visible', 'green', 'blue');
+    document.getElementById('phaseLabel').textContent = '';
+    updatePlayBtn();
+  }
+
+  setSpeed(s) { this.speed = s; }
+
+  _start() {
+    this.posIndex = 0;
+    this.phase = 'request';
+    const dot = document.getElementById('dot');
+    dot.style.transition = 'none';
+    dot.style.top = this._dotY(this.positions[0]) + 'px';
+    dot.offsetHeight;
+    dot.style.transition = '';
+    dot.classList.add('visible', 'green');
+    dot.classList.remove('blue');
+    this._setGlow(this.positions[0]);
+    this._updatePhaseLabel();
+  }
+
+  _scheduleAdvance() {
+    const delay = 700 / this.speed;
+    this.timer = setTimeout(() => this._advance(), delay);
+  }
+
+  _advance() {
+    this._clearGlow();
+
+    if (this.phase === 'request') {
+      this.posIndex++;
+      if (this.posIndex >= this.positions.length) {
+        this.phase = 'response';
+        this.posIndex = this.positions.length - 1;
+        this._markPhaseDone('req');
+        const dot = document.getElementById('dot');
+        dot.classList.remove('green');
+        dot.classList.add('blue');
+        this._updatePhaseLabel();
+        if (this.state === 'playing') {
+          this.timer = setTimeout(() => this._advance(), 600 / this.speed);
+        }
+        return;
+      }
+    } else {
+      this.posIndex--;
+      if (this.posIndex < 0) {
+        this._complete();
+        return;
+      }
+    }
+
+    const el = this.positions[this.posIndex];
+    const dot = document.getElementById('dot');
+    const moveMs = 350 / this.speed;
+    dot.style.transition = 'top ' + moveMs + 'ms cubic-bezier(0.4, 0, 0.2, 1)';
+    dot.style.top = this._dotY(el) + 'px';
+
+    setTimeout(() => {
+      this._setGlow(el);
+      this._updateStep();
+      this._updateConnectors();
+      if (this.state === 'playing') this._scheduleAdvance();
+    }, moveMs);
+  }
+
+  _complete() {
+    this.state = 'idle';
+    this._markPhaseDone('res');
+    this._resetConnectors();
+    const dot = document.getElementById('dot');
+    dot.classList.remove('visible');
+    document.getElementById('phaseLabel').textContent = 'Complete';
+    updatePlayBtn();
+  }
+
+  _markPhaseDone(phase) {
+    const iconCls = phase === 'req' ? 'done' : 'done-r';
+    document.querySelectorAll('.step-item[data-phase="' + phase + '"]').forEach(item => {
+      item.className = 'step-item done';
+      const icon = item.querySelector('.step-icon');
+      icon.className = 'step-icon ' + iconCls;
+      icon.textContent = '✓';
+    });
+  }
+
+  _setGlow(el) {
+    const cls = this.phase === 'request' ? 'glow-green' : 'glow-blue';
+    el.classList.add(cls);
+    this.activeEl = el;
+  }
+
+  _clearGlow() {
+    if (this.activeEl) {
+      this.activeEl.classList.remove('glow-green', 'glow-blue');
+      this.activeEl = null;
+    }
+  }
+
+  _updateStep() {
+    const el = this.positions[this.posIndex];
+    if (el.classList.contains('endpoint-card')) {
+      if (this.phase === 'request' && el.dataset.role === 'provider') {
+        this._markPhaseDone('req');
+      }
+      return;
+    }
+
+    if (this.phase === 'response') {
+      this._markPhaseDone('req');
+    }
+
+    const filterIdx = parseInt(el.dataset.idx);
+    const phase = this.phase === 'request' ? 'req' : 'res';
+    const stepIdx = this.phase === 'request'
+      ? filterIdx
+      : this.filters.length - 1 - filterIdx;
+
+    const items = document.querySelectorAll('.step-item[data-phase="' + phase + '"]');
+    items.forEach(item => {
+      const si = parseInt(item.dataset.si);
+      const icon = item.querySelector('.step-icon');
+      if (si < stepIdx) {
+        item.className = 'step-item done';
+        icon.className = 'step-icon ' + (phase === 'req' ? 'done' : 'done-r');
+        icon.textContent = '✓';
+      } else if (si === stepIdx) {
+        item.className = 'step-item active';
+        icon.className = 'step-icon ' + (phase === 'req' ? 'active' : 'active-r');
+        icon.textContent = '●';
+        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    });
+  }
+
+  _updateConnectors() {
+    const connectors = document.querySelectorAll('#pipeline .connector');
+    const clientCard = this.positions[0];
+    const providerCard = this.positions[this.positions.length - 1];
+
+    connectors.forEach(c => {
+      c.classList.remove('flow-green', 'flow-blue');
+      const cTop = c.offsetTop;
+
+      if (this.phase === 'request') {
+        const dotTop = this.positions[this.posIndex].offsetTop;
+        if (cTop < dotTop) c.classList.add('flow-green');
+      } else {
+        const dotTop = this.positions[this.posIndex].offsetTop;
+        if (cTop > dotTop) c.classList.add('flow-blue');
+      }
+    });
+  }
+
+  _resetConnectors() {
+    document.querySelectorAll('#pipeline .connector').forEach(c =>
+      c.classList.remove('flow-green', 'flow-blue'));
+  }
+
+  _resetSteps() {
+    document.querySelectorAll('.step-item').forEach(item => {
+      item.className = 'step-item';
+      const icon = item.querySelector('.step-icon');
+      icon.className = 'step-icon pending';
+      icon.textContent = '○';
+    });
+  }
+
+  _updatePhaseLabel() {
+    const label = document.getElementById('phaseLabel');
+    label.textContent = this.phase === 'request' ? '▶ Request' : '◀ Response';
+    label.style.color = this.phase === 'request' ? 'var(--green)' : 'var(--blue)';
+  }
+}
+
+function openModal(filter, cat) {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modalBody');
+  const color = CAT_COLORS[cat] || 'var(--text-1)';
+  const typeInfo = (data.filter_types || {})[filter.filter] || {};
+  const desc = filter.description || typeInfo.description || '';
+  const cfg = getFilterConfig(filter);
+  const hasConfig = Object.keys(cfg).length > 0;
+
+  let html =
+    '<div class="modal-title" style="color:' + color + '">' + esc(filter.filter) + '</div>';
+
+  if (desc) {
+    html += '<p class="modal-desc">' + esc(desc) + '</p>';
+  }
+
+  html += '<div class="modal-meta">' +
+      '<div class="meta-row"><span class="meta-label">Category</span>' +
+        '<span class="cat-badge ' + cat + '">' + (CAT_LABELS[cat] || cat) + '</span></div>' +
+      '<div class="meta-row"><span class="meta-label">Failure Mode</span>' +
+        '<span class="meta-value mono">' + esc(filter.failure_mode || 'closed') + '</span></div>' +
+      '<div class="meta-row"><span class="meta-label">Chain</span>' +
+        '<span class="meta-value mono">' + esc(filter.chain || '') + '</span></div>' +
+      '<div class="meta-row"><span class="meta-label">Pipeline Index</span>' +
+        '<span class="meta-value mono">' + (filter.pipeline_index ?? '') + '</span></div>' +
+    '</div>';
+
+  if (hasConfig) {
+    html += '<div style="margin-top:12px">' +
+      '<div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Configuration</div>' +
+      '<pre style="background:var(--bg-1);border:1px solid var(--border);border-radius:6px;padding:10px 12px;' +
+      'font-size:12px;font-family:\'SF Mono\',Menlo,Monaco,monospace;color:var(--text-2);overflow-x:auto;' +
+      'max-height:240px;overflow-y:auto;line-height:1.5;white-space:pre-wrap;word-break:break-all">' +
+      esc(JSON.stringify(cfg, null, 2)) +
+      '</pre></div>';
+  }
+
+  body.innerHTML = html;
+  modal.classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function updatePlayBtn() {
+  const btn = document.getElementById('playBtn');
+  if (engine && engine.state === 'playing') {
+    btn.innerHTML = '❚❚';
+    btn.classList.add('playing');
+  } else {
+    btn.innerHTML = '▶';
+    btn.classList.remove('playing');
+  }
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+document.getElementById('playBtn').onclick = () => engine && engine.play();
+document.getElementById('stepBtn').onclick = () => engine && engine.step();
+document.getElementById('resetBtn').onclick = () => engine && engine.reset();
+document.getElementById('modalX').onclick = closeModal;
+document.getElementById('modal').onclick = e => {
+  if (e.target === e.currentTarget) closeModal();
+};
+
+document.getElementById('speedGroup').onclick = e => {
+  const btn = e.target.closest('.speed-btn');
+  if (!btn) return;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (engine) engine.setSpeed(parseFloat(btn.dataset.speed));
+};
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('modal').classList.contains('open')) {
+    if (e.key === 'Escape') closeModal();
+    return;
+  }
+  if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); engine && engine.play(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); engine && engine.step(); }
+  else if (e.key === 'r' || e.key === 'R') { engine && engine.reset(); }
+  else if (e.key === 'Escape') { engine && engine.reset(); }
+});
+
+load();
+</script>
+</body>
+</html>
